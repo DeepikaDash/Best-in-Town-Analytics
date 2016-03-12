@@ -1,6 +1,6 @@
 setwd("C:/Users/ing12709/Desktop/Deepika/CrossSelling")
 
-list.of.packages <- c("randomForest","caret","dummies","arules", "tidyr")
+list.of.packages <- c("randomForest","caret","dummies","arules", "tidyr","Matrix")
 
 new.packages<-list.of.packages[!list.of.packages %in% rownames(installed.packages())]
 if(length(new.packages)) install.packages(new.packages)
@@ -38,12 +38,14 @@ cat("ClickStream_ProductCat_UserProfile data set property, number of rows: ", nr
 ClickStream_ProductCat_UserProfile_Cleaned <- ClickStream_ProductCat_UserProfile[,-5]
 cat("ClickStream_ProductCat_UserProfile_Cleaned data set property, number of rows: ", nrow(ClickStream_ProductCat_UserProfile_Cleaned), ", number of columns: ", ncol(ClickStream_ProductCat_UserProfile_Cleaned))
 
-summary(is.na(ClickStream_ProductCat_UserProfile_Cleaned))
-
-#ClickStream_ProductCat_UserProfile_Cleaned[ClickStream_ProductCat_UserProfile_Cleaned$College.Education == "Unknown"]=NA
-
-#sum(ClickStream_ProductCat_UserProfile_Cleaned == "Unknown",na.rm = T)
 
 ClickStream_ProductCat_UserProfile_Cleaned$newCol=1
 
 combineData <- reshape(ClickStream_ProductCat_UserProfile_Cleaned[],timevar = "Category",idvar = c("User.ID"),direction = "wide",v.names = "newCol")
+
+combineData[,10:22][combineData[,10:22]==1] <- "TRUE"
+combineData[,10:22][is.na(combineData[,10:22])] <- "FALSE"
+
+rules<-apriori(combineData[,10:22],parameter = list(minlen=1,maxlen=2,conf=.1))
+rules.sub <- subset(rules, subset = rhs %pin% "TRUE" & lhs %pin% "TRUE")
+inspect(head(sort(rules, by="lift"),3));
